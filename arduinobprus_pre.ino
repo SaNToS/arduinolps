@@ -349,6 +349,19 @@ void loop() //основной цикл работы МК
         if(set<4) digitalWrite(A4, 0); // гасим красный светодиод. Перегрузки нет.
       }
     }
+  //Зашита от Что то пошло не так. Например сгорел транзистор.
+    if (level==0 & off==false & counter<Uout & Iout>0)
+    {  
+      if(set<4)//если уже не сработала защита
+      { 
+        digitalWrite(power, 0); //вырубаем реле
+     level = 0; //убираем ШИМ сигнал
+     digitalWrite(A4, 1);                
+     Serial.print("I0;U0;r1;W0;");
+     Serial.println(' ');
+        set = 8;
+      }  
+    }
   /* ЗАЩИТА КОНЕЦ */
   
   
@@ -666,6 +679,18 @@ if(currentMillis - com2 > com) {
   if(set==7){//защита. вывод инфы
     lcd.setCursor (0, 0);
     print_rus(0,0, "[3АЩИТА MAX PWM]");
+    lcd.setCursor (0, 1);
+    lcd.print("Iout");
+    lcd.print(">Imax(");
+    lcd.print(Ioutmax);
+    lcd.print("A)"); 
+    level=0;
+    Serial.print("I0;U0;r1;W0;");
+    Serial.println(' ');
+  }
+    if(set==8){//защита. вывод инфы
+    lcd.setCursor (0, 0);
+    print_rus(0,0, "[4ТО ТО  НЕ ТАК]");
     lcd.setCursor (0, 1);
     lcd.print("Iout");
     lcd.print(">Imax(");
