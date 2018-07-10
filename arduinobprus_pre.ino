@@ -331,7 +331,24 @@ void loop() //основной цикл работы МК
      Serial.println(' ');
      set = 6;
   }
-  
+   //Зашита от длительного максимального шим
+    if (level==8190 & off==false)
+    {  
+      if(set<4)//если уже не сработала защита
+      { 
+        maxpwm++; //добавляем +1 к счетчику
+        digitalWrite(A4, 1); //светим красным для предупреждения о максимальном ШИМ
+      }  
+    }
+    else //шим у нас не максимальный, поэтому поубавим счетчик
+    {
+      maxpwm--;
+      if(maxpwm<0)//если счетчик дошел до нуля
+      {
+        maxpwm = 0; //таким его и держим
+        if(set<4) digitalWrite(A4, 0); // гасим красный светодиод. Перегрузки нет.
+      }
+    }
   /* ЗАЩИТА КОНЕЦ */
   
   
@@ -637,6 +654,18 @@ if(currentMillis - com2 > com) {
   if(set==5){//защита. вывод инфы
     lcd.setCursor (0, 0);
     print_rus(0,0, "[3АЩИТА ПО ТОКY]");
+    lcd.setCursor (0, 1);
+    lcd.print("Iout");
+    lcd.print(">Imax(");
+    lcd.print(Ioutmax);
+    lcd.print("A)"); 
+    level=0;
+    Serial.print("I0;U0;r1;W0;");
+    Serial.println(' ');
+  }
+  if(set==7){//защита. вывод инфы
+    lcd.setCursor (0, 0);
+    print_rus(0,0, "[3АЩИТА MAX PWM]");
     lcd.setCursor (0, 1);
     lcd.print("Iout");
     lcd.print(">Imax(");
