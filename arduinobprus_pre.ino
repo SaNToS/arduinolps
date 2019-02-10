@@ -86,6 +86,8 @@ long com2 = 0;
 int mode = 0;            //режим (0 обычный, спабилизация тока, защита по току)
 float Ioutmax = 1.0;     //заданный ток
 int set = 0;             //пункты меню, отображение защиты...
+int set2 = 0;             //пункты меню, отображение защиты...
+int pulse = 0;
 int knopka_a = 0;        //состояние кнопок
 int knopka_b = 0;
 int knopka_ab = 0;
@@ -93,9 +95,9 @@ boolean off = false;
 boolean red = false;      //красный светодиод
 boolean blue = false;     //синий светодиод
 float counter = 5;       // переменная хранит заданное напряжение
-int disp = 0;            //режим отображения 0 ничего, 1 мощьность, 2 режим, 3 установленный ток, 4 шим уровень
+int disp = 2;            //режим отображения 0 ничего, 1 мощьность, 2 режим, 3 установленный ток, 4 шим уровень
 float Uout ;             //напряжение на выходе
-
+unsigned long timing;
 
 
 
@@ -202,7 +204,7 @@ void uup(){ //енкодер +
   if(set==3){//сброс счетчика А*ч
     ah = 0;
     set = 0;
-    disp = 5;
+    disp = 2;
   }
   if(set==4){//сохранение текущих настроек в память
     save();
@@ -485,19 +487,26 @@ if (! bounce && btn != digitalRead(button1)) { // если прошел фрон
         if (! btn_old && btn && flag && millis() - past_flag < time  ) {
           flag = 0;      
  lcd.clear();
- if(set<10) set = 10;
+ if(set<10 && set2==0) set=10;
  else{
- if(set==10) set = set+1;
+ if(set2==1) set = set=11;
  else{
- if(set==11) set = set+1;
+ if(set2==2) set = set=12;
  else{
- if(set==12) {
- set = 0;
-   lcd.clear();
+  if(set2==3) set = set=13;
+ else{
+  if(set2==4) set = set=14;
+ else{
+ }
+ if(set2==5) {
+ set2 = 0;
+ set = 10;
   }
  }
  }
- }  
+ }
+ }
+   
       }
       if (flag && millis() - past_flag >= time ) {
         flag = 0;     
@@ -506,7 +515,7 @@ if (! bounce && btn != digitalRead(button1)) { // если прошел фрон
 //Ioutmax = 2;
 //disp = 3;
   disp = disp + 1; //поочередно переключаем режим отображения информации
-  if(disp==6) disp = 0; //дошли до конца, начинаем снова
+  if(disp==5) disp = 0; //дошли до конца, начинаем снова
   lcd.clear();
   }
       }
@@ -580,28 +589,43 @@ if(currentMillis - com2 > com) {
         lcd.print(" ");
         lcd.print (Uout * Iout,2); 
         lcd.print("W   ");
+          if (millis() - timing > 5000){ // Вместо 10000 подставьте нужное вам значение паузы 
+  timing = millis(); 
+ disp=2;
+      }
       }  
       if(disp==2){  //режим БП
         if(mode==0)print_rus(8,1,"СТАНДАРТ"); 
         if(mode==1)print_rus(8,1,"  3АЩИТА  "); 
         if(mode==2)print_rus(8,1,"СТАБ.ТОК");
+        if (millis() - timing > 5000){ // Вместо 10000 подставьте нужное вам значение паузы 
+  timing = millis();
+   if(mode>0) disp=3;
+ else{ 
+ disp=1;
+ }
       }  
+      }
       if(disp==3){  //максимальный ток
         lcd.print (" I>"); 
         lcd.print (Ioutmax, 2); 
         lcd.print ("A ");
+          if (millis() - timing > 5000){ // Вместо 10000 подставьте нужное вам значение паузы 
+  timing = millis(); 
+ disp=1;
+      }
       }
       if(disp==4){  // значение ШИМ
         lcd.print ("pwm:"); 
         lcd.print (ceil(level), 0); 
         lcd.print ("  ");
       }
-      if(disp==5){  // значение ШИМ
-        lcd.print ("R="); 
-        lcd.print (Iout / Uout,2); 
-        lcd.print ("  ");
-      }
-      if(disp==6){  // cчетчик А*ч
+//      if(disp==5){  // значение ШИМ
+//        lcd.print ("R="); 
+//        lcd.print (Iout / Uout,2); 
+//        lcd.print ("  ");
+//      }
+      if(disp==5){  // cчетчик А*ч
         if(ah<1){
           if(ah<=0.01) lcd.print (" ");
           if(ah<=0.1) lcd.print (" ");
@@ -648,19 +672,45 @@ if(currentMillis - com2 > com) {
     print_rus(0,1,"СОХРАНЕНИЕ?   ->");
   }
     if(set==10){//спрашиваем хочет ли юзер сохранить настройки
-    print_rus(0,0, "> ПРЕДYСТАНОВКА");
-    lcd.setCursor (0, 1);
-    print_rus(0,1,"4.2В 1А 3АЩИТА->");
-  }
+counter = 3.7;
+mode = 0;
+Ioutmax = 1;
+disp = 2;
+set = 0;
+set2=1;
+ }
+
     if(set==11){//спрашиваем хочет ли юзер сохранить настройки
-    print_rus(0,0, "> ПРЕДYСТАНОВКА");
-    lcd.setCursor (0, 1);
-    print_rus(0,1,"5В 1А 3АЩИТА  ->");
+counter = 5;
+mode = 0;
+Ioutmax = 1;
+disp = 2;
+set = 0;
+set2=2;
   }
     if(set==12){//спрашиваем хочет ли юзер сохранить настройки
-    print_rus(0,0, "> ПРЕДYСТАНОВКА");
-    lcd.setCursor (0, 1);
-    print_rus(0,1,"12В 1А 3АЩИТА ->");
+counter = 12;
+mode = 0;
+Ioutmax = 1;
+disp = 2;
+set = 0;
+set2=3;
+  }    
+   if(set==13){//спрашиваем хочет ли юзер сохранить настройки
+counter = 21;
+mode = 0;
+Ioutmax = 1;
+disp = 2;
+set = 0;
+set2=4;
+  }    
+   if(set==14){//спрашиваем хочет ли юзер сохранить настройки
+counter = 2;
+mode = 1;
+Ioutmax = 1;
+disp = 2;
+set = 0;
+set2=5;
   }    
   
   /* ИНДИКАЦИЯ ЗАЩИТЫ */
@@ -720,4 +770,3 @@ if(currentMillis - com2 > com) {
     }
   }  
 }
-
